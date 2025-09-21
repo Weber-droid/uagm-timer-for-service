@@ -78,6 +78,45 @@
     font-size: 35rem;   /* BIGGER clock */
     font-weight: bold;
     margin: 30px 0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #clock:hover {
+    color: #aaa;
+  }
+
+  #time-editor {
+    display: none;
+    font-size: 3rem;
+    margin: 30px 0;
+  }
+
+  #time-editor input {
+    background: #333;
+    color: white;
+    border: 2px solid #666;
+    border-radius: 5px;
+    font-size: 3rem;
+    width: 80px;
+    text-align: center;
+    margin: 0 10px;
+  }
+
+  #time-editor input:focus {
+    border-color: limegreen;
+    outline: none;
+  }
+
+  #time-editor button {
+    font-size: 1.5rem;
+    margin: 0 10px;
+  }
+
+  .edit-hint {
+    font-size: 1rem;
+    color: #888;
+    margin-top: 10px;
   }
   </style>
 </head>
@@ -85,7 +124,17 @@
   <button id="fullscreen-btn" onclick="goFullscreen()">Fullscreen</button>
 
   <h1 id="title">Now: Worship</h1>
-  <div id="clock">00:00</div>
+  <div id="clock" onclick="enableTimeEdit()">00:00</div>
+  <div class="edit-hint">Click the clock to edit time</div>
+
+  <div id="time-editor">
+    <input type="number" id="minutes-input" min="0" max="99" placeholder="MM">
+    <span>:</span>
+    <input type="number" id="seconds-input" min="0" max="59" placeholder="SS">
+    <br><br>
+    <button onclick="saveTimeEdit()">Save</button>
+    <button onclick="cancelTimeEdit()">Cancel</button>
+  </div>
 
   <div id="progress">
     <div id="progress-bar"></div>
@@ -101,9 +150,9 @@
 
   <script>
     const segments = [
-      { name: "Worship", duration: 30 }, // seconds (change to 30*60 for minutes)
-      { name: "Praise", duration: 20 },
-      { name: "Sermon", duration: 15 }
+      { name: "Worship", duration: 25*60 }, // seconds (change to 30*60 for minutes)
+      { name: "Praise", duration: 20*60 },
+      { name: "Sermon", duration: 20*60 }
     ];
 
     let currentIndex = 0;
@@ -168,6 +217,68 @@
         elem.requestFullscreen();
       }
     }
+
+    function enableTimeEdit() {
+      // Don't allow editing while timer is running
+      if (timer) return;
+      
+      // Hide clock and show editor
+      document.getElementById("clock").style.display = "none";
+      document.querySelector(".edit-hint").style.display = "none";
+      document.getElementById("time-editor").style.display = "block";
+      
+      // Populate current time
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      document.getElementById("minutes-input").value = mins;
+      document.getElementById("seconds-input").value = secs;
+      
+      // Focus on minutes input
+      document.getElementById("minutes-input").focus();
+      document.getElementById("minutes-input").select();
+    }
+
+    function saveTimeEdit() {
+      const mins = parseInt(document.getElementById("minutes-input").value) || 0;
+      const secs = parseInt(document.getElementById("seconds-input").value) || 0;
+      
+      // Validate input
+      if (mins < 0 || mins > 99 || secs < 0 || secs > 59) {
+        alert("Please enter valid time (minutes: 0-99, seconds: 0-59)");
+        return;
+      }
+      
+      // Update remaining time
+      remaining = mins * 60 + secs;
+      
+      // Update the current segment duration so reset works correctly
+      segments[currentIndex].duration = remaining;
+      
+      cancelTimeEdit();
+      updateUI();
+    }
+
+    function cancelTimeEdit() {
+      // Hide editor and show clock
+      document.getElementById("time-editor").style.display = "none";
+      document.getElementById("clock").style.display = "block";
+      document.querySelector(".edit-hint").style.display = "block";
+    }
+
+    // Handle Enter key in time inputs
+    document.addEventListener('DOMContentLoaded', function() {
+      const inputs = document.querySelectorAll('#time-editor input');
+      inputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            saveTimeEdit();
+          }
+          if (e.key === 'Escape') {
+            cancelTimeEdit();
+          }
+        });
+      });
+    });
 
     // Initialize
     updateUI();
