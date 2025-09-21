@@ -20,6 +20,17 @@
     h1 {
       font-size: 2rem;
       margin-bottom: 10px;
+      animation: slideLeftRight 8s ease-in-out infinite;
+      white-space: nowrap;
+    }
+
+    @keyframes slideLeftRight {
+      0%, 100% {
+        transform: translateX(-50px);
+      }
+      50% {
+        transform: translateX(50px);
+      }
     }
 
     #clock {
@@ -47,6 +58,31 @@
     #next {
       font-size: 1.2rem;
       color: #ccc;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+
+    #next:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    #previous {
+      font-size: 1.2rem;
+      color: #ccc;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+
+    #previous:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .navigation-hint {
+      font-size: 0.8rem;
+      color: #666;
+      margin: 5px 0;
     }
 
     #controls {
@@ -75,7 +111,7 @@
     }
 
     #clock {
-    font-size: 35rem;   /* BIGGER clock */
+    font-size: 25rem;   /* BIGGER clock */
     font-weight: bold;
     margin: 30px 0;
     cursor: pointer;
@@ -140,12 +176,18 @@
     <div id="progress-bar"></div>
   </div>
 
-  <div id="next">Next: Praise</div>
+  <div id="previous" onclick="goToPrevious()">Previous: ---</div>
+  <div class="navigation-hint">Click to go to previous segment</div>
+  
+  <div id="next" onclick="goToNext()">Next: Praise</div>
+  <div class="navigation-hint">Click to go to next segment</div>
 
   <div id="controls">
+    <button onclick="goToPrevious()">← Previous</button>
     <button onclick="startTimer()">Start</button>
     <button onclick="pauseTimer()">Pause</button>
     <button onclick="resetTimer()">Reset</button>
+    <button onclick="goToNext()">Next →</button>
   </div>
 
   <script>
@@ -168,10 +210,18 @@
         ((segments[currentIndex].duration - remaining) / segments[currentIndex].duration) * 100;
       document.getElementById("progress-bar").style.width = progressPercent + "%";
 
+      // Update next segment display
       if (segments[currentIndex + 1]) {
         document.getElementById("next").textContent = `Next: ${segments[currentIndex + 1].name}`;
       } else {
         document.getElementById("next").textContent = "Next: ---";
+      }
+
+      // Update previous segment display
+      if (segments[currentIndex - 1]) {
+        document.getElementById("previous").textContent = `Previous: ${segments[currentIndex - 1].name}`;
+      } else {
+        document.getElementById("previous").textContent = "Previous: ---";
       }
     }
 
@@ -215,6 +265,34 @@
       const elem = document.documentElement;
       if (elem.requestFullscreen) {
         elem.requestFullscreen();
+      }
+    }
+
+    function goToNext() {
+      // Don't navigate while timer is running
+      if (timer) {
+        alert("Please pause the timer before navigating to another segment.");
+        return;
+      }
+      
+      if (currentIndex < segments.length - 1) {
+        currentIndex++;
+        remaining = segments[currentIndex].duration;
+        updateUI();
+      }
+    }
+
+    function goToPrevious() {
+      // Don't navigate while timer is running
+      if (timer) {
+        alert("Please pause the timer before navigating to another segment.");
+        return;
+      }
+      
+      if (currentIndex > 0) {
+        currentIndex--;
+        remaining = segments[currentIndex].duration;
+        updateUI();
       }
     }
 
