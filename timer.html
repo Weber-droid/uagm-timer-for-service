@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UAGM Service Timer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #111;
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    #clock {
+      font-size: 6rem;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    #progress {
+      width: 80%;
+      height: 20px;
+      margin: 20px auto;
+      background: #444;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: limegreen;
+      transition: width 1s linear;
+    }
+
+    #next {
+      font-size: 1.2rem;
+      color: #ccc;
+    }
+
+    #controls {
+      margin-top: 30px;
+    }
+
+    button {
+      background: #444;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #666;
+    }
+
+    #fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+
+    #clock {
+    font-size: 35rem;   /* BIGGER clock */
+    font-weight: bold;
+    margin: 30px 0;
+  }
+  </style>
+</head>
+<body>
+  <button id="fullscreen-btn" onclick="goFullscreen()">Fullscreen</button>
+
+  <h1 id="title">Now: Worship</h1>
+  <div id="clock">00:00</div>
+
+  <div id="progress">
+    <div id="progress-bar"></div>
+  </div>
+
+  <div id="next">Next: Praise</div>
+
+  <div id="controls">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseTimer()">Pause</button>
+    <button onclick="resetTimer()">Reset</button>
+  </div>
+
+  <script>
+    const segments = [
+      { name: "Worship", duration: 30 }, // seconds (change to 30*60 for minutes)
+      { name: "Praise", duration: 20 },
+      { name: "Sermon", duration: 15 }
+    ];
+
+    let currentIndex = 0;
+    let remaining = segments[currentIndex].duration;
+    let timer = null;
+
+    function updateUI() {
+      const mins = String(Math.floor(remaining / 60)).padStart(2, "0");
+      const secs = String(remaining % 60).padStart(2, "0");
+      document.getElementById("clock").textContent = `${mins}:${secs}`;
+      document.getElementById("title").textContent = `Now: ${segments[currentIndex].name}`;
+      const progressPercent = 
+        ((segments[currentIndex].duration - remaining) / segments[currentIndex].duration) * 100;
+      document.getElementById("progress-bar").style.width = progressPercent + "%";
+
+      if (segments[currentIndex + 1]) {
+        document.getElementById("next").textContent = `Next: ${segments[currentIndex + 1].name}`;
+      } else {
+        document.getElementById("next").textContent = "Next: ---";
+      }
+    }
+
+    function startTimer() {
+      if (timer) return;
+      timer = setInterval(() => {
+        remaining--;
+        updateUI();
+
+        if (remaining <= 0) {
+          clearInterval(timer);
+          timer = null;
+          currentIndex++;
+          if (currentIndex < segments.length) {
+            remaining = segments[currentIndex].duration;
+            updateUI();
+            startTimer();
+          } else {
+            document.getElementById("title").textContent = "All sessions finished 🎉";
+            document.getElementById("clock").textContent = "00:00";
+            document.getElementById("next").textContent = "";
+          }
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    function resetTimer() {
+      clearInterval(timer);
+      timer = null;
+      currentIndex = 0;
+      remaining = segments[currentIndex].duration;
+      updateUI();
+    }
+
+    function goFullscreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      }
+    }
+
+    // Initialize
+    updateUI();
+  </script>
+</body>
+</html>
